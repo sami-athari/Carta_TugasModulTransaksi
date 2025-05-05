@@ -1,106 +1,40 @@
 <?php
+// app/Http/Controllers/ProdukController.php
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    /**
-     * Hanya pengguna yang sudah login bisa akses controller ini.
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    /**
-     * Halaman dashboard user (dengan fitur search).
-     */
     public function index(Request $request)
     {
-        // Ambil keyword pencarian dari query string
-        $search = $request->query('search');
+        $categories = Category::all();
 
-        // Jika ada search, filter nama produk
-        $produks = Produk::when($search, function($query, $search) {
-                return $query->where('nama', 'like', '%' . $search . '%');
-            })
-            ->orderBy('kode_produk')
-            ->paginate(25); // Batasi 25 produk per halaman
+        // Mulai query produk dengan relasi category
+        $query = Produk::with('category');
 
-        return view('home', compact('produks', 'search')); // Jangan lupa kirim $search ke view
-    }
+        // Filter berdasarkan pencarian nama atau kode_produk
+        if ($request->filled('search')) {
+            $keyword = $request->search;
+            $query->where(function($q) use ($keyword) {
+                $q->where('nama', 'like', "%{$keyword}%")
+                  ->orWhere('kode_produk', 'like', "%{$keyword}%");
+            });
+        }
 
-    /**
-     * Halaman dashboard admin.
-     */
-    public function adminHome(Request $request)
-    {
-        // Ambil keyword pencarian dari query string
-        $search = $request->query('search');
+        // Filter berdasarkan kategori
+        if ($request->filled('category_id')) {
+            $query->where('kategori', $request->category_id);
+        }
 
-        // Jika ada search, filter nama produk
-        $produks = Produk::when($search, function($query, $search) {
-                return $query->where('nama', 'like', '%' . $search . '%');
-            })
-            ->orderBy('kode_produk')
-            ->paginate(25); // Batasi 25 produk per halaman
+        // Paginate hasil
+        $produks = $query->orderBy('created_at', 'desc')
+                          ->paginate(10)
+                          ->appends($request->only(['search', 'category_id']));
 
-        return view('adminHome', compact('produks', 'search')); // Kirim $produks dan $search ke view
-    }
-
-    /**
-     * Simpan produk baru (dari admin).
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'kode_produk' => 'required|unique:produks',
-            'nama' => 'required',
-            'harga' => 'required|numeric',
-        ]);
-
-        Produk::create($request->all());
-
-        return redirect()->route('adminHome')->with('success', 'Produk berhasil ditambahkan');
-    }
-
-    /**
-     * Form edit produk (admin).
-     */
-    public function edit($id)
-    {
-        $produk = Produk::findOrFail($id);
-        return view('produk.edit', compact('produk'));
-    }
-
-    /**
-     * Update data produk (admin).
-     */
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'kode_produk' => 'required',
-            'nama' => 'required',
-            'harga' => 'required|numeric',
-        ]);
-
-        $produk = Produk::findOrFail($id);
-        $produk->update($request->all());
-
-        return redirect()->route('adminHome')->with('success', 'Produk berhasil diperbarui');
-    }
-
-    /**
-     * Hapus produk (admin).
-     */
-    public function destroy($id)
-    {
-        $produk = Produk::findOrFail($id);
-        $produk->delete();
-
-        return redirect()->route('adminHome')->with('success', 'Produk berhasil dihapus');
+        return view('user.index', compact('produks', 'categories'));
     }
 }

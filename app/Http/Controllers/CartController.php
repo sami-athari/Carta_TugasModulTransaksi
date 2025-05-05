@@ -13,7 +13,7 @@ class CartController extends Controller
     public function index()
     {
         $carts = Cart::with('produk')->where('user_id', Auth::id())->get();
-        return view('cart.index', compact('carts'));
+        return view('user.cart.index', compact('carts'));
     }
 
     public function store($produk_id)
@@ -21,7 +21,7 @@ class CartController extends Controller
         $produk = Produk::find($produk_id);
 
         if (!$produk) {
-            return redirect()->route('cart.index')->with('error', 'Produk tidak ditemukan');
+            return redirect()->route('user.cart.index')->with('error', 'Produk tidak ditemukan');
         }
 
         $existingCart = Cart::where('user_id', Auth::id())
@@ -29,7 +29,7 @@ class CartController extends Controller
                             ->first();
 
         if ($existingCart) {
-            return redirect()->route('cart.index')->with('error', 'Produk sudah ada di keranjang');
+            return redirect()->route('user.cart.index')->with('error', 'Produk sudah ada di keranjang');
         }
 
         Cart::create([
@@ -39,7 +39,7 @@ class CartController extends Controller
             'tanggal_transaksi' => now(),
         ]);
 
-        return redirect()->route('cart.index')->with('success', 'Produk ditambahkan ke keranjang');
+        return redirect()->route('user.cart.index')->with('success', 'Produk ditambahkan ke keranjang');
     }
 
     public function bayar($id)
@@ -58,12 +58,12 @@ class CartController extends Controller
         $cart = Cart::find($id);
 
         if (!$cart || $cart->status == 'Selesai') {
-            return redirect()->route('cart.index')->with('error', 'Tidak bisa menghapus transaksi yang sudah selesai');
+            return redirect()->route('user.cart.index')->with('error', 'Tidak bisa menghapus transaksi yang sudah selesai');
         }
 
         $cart->delete();
 
-        return redirect()->route('cart.index')->with('success', 'Item keranjang dihapus');
+        return redirect()->route('user.cart.index')->with('success', 'Item keranjang dihapus');
     }
 
     public function cetakTransaksi($id)
@@ -71,7 +71,7 @@ class CartController extends Controller
         $cart = Cart::with('produk')->find($id);
 
         if (!$cart) {
-            return redirect()->route('cart.index')->with('error', '  tidak ditemukan');
+            return redirect()->route('user.cart.index')->with('error', '  tidak ditemukan');
         }
 
         // Membuat file PDF dari view 'cart.pdf'

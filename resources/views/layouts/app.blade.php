@@ -26,9 +26,9 @@
                     if(auth()->check()) {
                         // Jika ada guard admin, pakai Auth::guard('admin')->user() atau cek role di sini
                         if(auth()->user()->role === 'admin') {
-                            $homeRoute = route('adminHome');  // Pastikan ini rute admin
+                            $homeRoute = route('admin.index');  // Pastikan ini rute admin
                         } else {
-                            $homeRoute = route('home');  // Rute untuk user biasa
+                            $homeRoute = route('user.index');  // Rute untuk user biasa
                         }
                     } else {
                         $homeRoute = url('/'); // guest => welcome page

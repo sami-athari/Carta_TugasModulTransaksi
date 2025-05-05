@@ -13,7 +13,7 @@ class TransaksiController extends Controller
         $pending = Cart::with(['produk','user'])
                        ->where('status','!=','Selesai')
                        ->get();
-        return view('transaksi', compact('pending'));
+        return view('admin.produk.transaksi', compact('pending'));
     }
 
     // Menyetujui satu transaksi
@@ -35,6 +35,6 @@ class TransaksiController extends Controller
             'tanggal_transaksi' => now()
         ]);
 
-        return redirect()->route('transaksi')->with('success', 'Pesanan berhasil dikonfirmasi!');
+        return redirect()->route('admin.produk.transaksi')->with('success', 'Pesanan berhasil dikonfirmasi!');
     }
 }
